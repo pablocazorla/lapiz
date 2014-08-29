@@ -12,10 +12,3 @@ h1{font-size:24px;line-height:1.6em;margin-bottom:30px;}
 canvas{
 	display:block;margin:0 auto 30px;background-color:#FFF;border:solid 1px #BBB;
 }
-
-#cons{
-	text-align:left;border: dotted 1px #AAA;padding:15px;
-}
-b{
-	font-weight:bold;margin-bottom:15px;
-}
