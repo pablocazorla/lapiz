@@ -3,13 +3,13 @@
 
 	var
 		/*
-		 * Utils
+		 * Utils *******************************************************************************************************
 		*/
 		// Console
 		k = function(str){
 			try{console.log(str);}catch(e){};			
 		},
-		// extend
+		// extend objects
 		extend = function(){
 			var dest = {},
 				ext = function(destination, source) {
@@ -28,96 +28,94 @@
 				dest = ext(dest,arguments[i]);
 		    }
 		    return dest;
-		},		
+		},
+
 		/*
-		 * Private variables
+		 * Private variables *******************************************************************************************************
 		*/
-		canvasList = [],
-		canvasListLength = 0,
+
+		// Context
+		c,
+
+		// if use Sprites
+		spriteMode = false,
+
+		// Counter ti generate differents IDs.
 		idCounter = 0,
-		timeRender = null,
+
+		defOptions = {
+			x : 10,
+			y : 10,
+			fillStyle : '#808080',
+			fillStroke : '#000'
+		}
 
 		/*
-		 * Private methods
+		 * Private handlers *******************************************************************************************************
 		*/
-		findCanvasById = function(id){
-			var canvasToReturn = false;
-			for(var i=0;i<canvasListLength;i++){
-				if(canvasList[i].id == id){
-					canvasToReturn = canvasList[i];
+		// Canvas List handler.
+		canvasList = {
+			list: [],
+			length: 0,			
+			find : function(selection){
+				var idSelection = (typeof selection == 'string') ? selection : this.nodeId(selection),
+						canvasToReturn = false;
+				for(var i=0;i<this.length;i++){
+					if(this.list[i].id == idSelection){
+						canvasToReturn = this.list[i];
+					}
+				}
+				return canvasToReturn;
+			},
+			nodeId : function(node){
+				var idCanvas = node.getAttribute('id');
+				if(idCanvas == '' || idCanvas == undefined){
+					idCanvas = 'canvas-'+idCounter;
+					idCounter++;
+					node.setAttribute('id',idCanvas);				
+				}
+				return idCanvas;
+			},
+			newCanvas : function(selection){
+				var idSelection = (typeof selection == 'string') ? selection : this.nodeId(selection),
+					nc = new cnv(idSelection);
+				this.list.push(nc);
+				this.length++;
+				return nc;
+			},
+			getNumSprites : function(){
+				var num = 0;
+				for(var i=0;i<this.length;i++){
+					num += this.list[i].length;				
+				}
+				return num;
+			},
+			render : function(){
+				for(var i=0;i<this.length;i++){
+					this.list[i].render();				
 				}
 			}
-			return canvasToReturn;
 		},
-		canvasNodeId = function(node){
-			var idCanvas = node.getAttribute('id');
-			if(idCanvas == '' || idCanvas == undefined){
-				idCanvas = 'canvas-'+idCounter;
-				idCounter++;
-				node.setAttribute('id',idCanvas);				
-			}
-			return idCanvas;
-		},
-		setContextStyle = function(o){
-			for(var a in o){
-				if(typeof c[a] != 'undefined'){
-					c[a] = o[a];
-				}
-			}
-		},
+
+		
 
 		/*
-		 * Shapes
+		 * Private Classes *******************************************************************************************************
 		*/
-		shapeOptionsDefault = {
-			x : 0,
-			y : 0,
-			fillStyle : '#FFF',
-			strokeStyle : '#000'
-		},
-		shapes = {
-			'circle': function(options){
-				var o = extend(shapeOptionsDefault,{
-					radius : 10				
-				},options);
-				setContextStyle(o);
-			},
-			'rectangle': function(options){
-				var o = extend(shapeOptionsDefault,{
-					width : 100,
-					height : 100
-				},options);
-				setContextStyle(o);
-
-				c.beginPath();
-				c.moveTo(o.x, o.y);
-				c.lineTo(o.x+o.width,o.y);
-				c.lineTo(o.x+o.width,o.y+o.height);
-				c.lineTo(o.x,o.y+o.height);
-				c.lineTo(o.x, o.y);
-				c.fill();
-				c.stroke();
-				c.closePath();
-			},
-		},
-
-		/*
-		 * Canvas Class
-		*/
+		// Canvas Class
 		cnv = function(selection){
 			return this.init(selection);
 		},
 
-		/*
-		 * Sprite Class
-		*/
+		// Sprite Class
 		spr = function(shapeFunction,options){
 			return this.init(shapeFunction,options);
 		};
 
 	/*
-	 * Canvas Definition
+	 * Private Classes Definitions *******************************************************************************************************
 	*/
+	// Canvas Class Definition
 	cnv.prototype = {
 		init : function(selection){
 			this.node = document.getElementById(selection);
@@ -127,10 +125,8 @@
 			}else{
 				k('There is not canvas with id: '+selection+'.');
 			}
-
 			this.childs = [];
 			this.length = 0;
-
 			return this;			
 		},
 		append : function(sprite){
@@ -140,6 +136,7 @@
 			this.childs.push(sprite);				
 			this.length++;
 			sprite.parent = this;
+			lapiz.verifySpriteMode();
 			return this;
 		},
 		detach : function(sprite){
@@ -149,6 +146,7 @@
 						sprite.parent = null;
 						this.childs.splice(i,1);
 						this.length--;
+						lapiz.verifySpriteMode();
 					}
 				}
 			}
@@ -165,9 +163,7 @@
 		}
 	};
 
-	/*
-	 * Sprite Definition
-	*/
+	// Sprite Class Definition
 	spr.prototype = {
 		spriteType : true,
 		init : function(shapeFunction, options){
@@ -188,16 +184,8 @@
 
 			return this;
 		},
-		shape : function(shapeFunction, options){
-			var shapeFunction = shapeFunction || function(){};
-			if(typeof shapeFunction == 'string'){
-				if(typeof shapes[shapeFunction.toLowerCase()] == 'function'){
-					shapeFunction = shapes[shapeFunction.toLowerCase()];
-				}else{
-					k('Sorry, there is not a shape named "'+shapeFunction+'".');
-				}
-			}
-			this.shp = function(){shapeFunction(options);};
+		shape : function(shapeFunction){			
+			this.shp = shapeFunction || function(){};
 			return this;
 		},
 		append : function(sprite){
@@ -261,43 +249,105 @@
 	};
 
 	/*
-	 * Lapiz
+	 * Public Lapiz *******************************************************************************************************
 	*/
 	var lapiz = {
-		init : function(){
-			if(timeRender == null){
-				timeRender = setInterval(function(){
-					for(var i = 0; i < canvasListLength; i++){
-						canvasList[i].render();
-					}
-				},20);
-			}
+		timeFrameRender : null,
+		init : function(){		
 			return this;
 		},	
-		sprite : function(shapeFunction,options){
+		sprite : function(shapeFunction,options){			
 			return new spr(shapeFunction,options);
 		},
 		getCanvas : function(selection){
-			var idSelection = (typeof selection == 'string') ? selection : canvasNodeId(selection),
-				preCanvas = findCanvasById(idSelection);
-
+			var preCanvas = canvasList.find(selection);
 			if(preCanvas){
 				return preCanvas;
 			}else{
-				var newCanvas = new cnv(idSelection);
-				canvasList.push(newCanvas);
-				canvasListLength++;
+				var newCanvas = canvasList.newCanvas(selection);
 				return newCanvas;
 			}
 		},
+		verifySpriteMode : function(){
+			var numSprites = canvasList.getNumSprites();
+			if(numSprites > 0){
+				if(this.timeFrameRender == null){
+					spriteMode = true;
+					this.timeFrameRender = setInterval(function(){
+						canvasList.render();
+					},20);
+				}
+			}else{
+				if(this.timeFrameRender != null){
+					spriteMode = false;
+					clearInterval(this.timeFrameRender);
+					this.timeFrameRender = null;
+				}
+			}
+			return this;
+		},
+
+		// Drawing		
+		setStyles = function(o){
+			for(var a in o){
+				if(typeof c[a] != 'undefined'){
+					c[a] = o[a];
+				}
+			}
+			return this;
+		},
+		beginPath : function(){
+			c.beginPath();
+			return this;
+		},
+		moveTo : function(x,y){
+			c.moveTo(x,y);
+			return this;
+		},
+		lineTo : function(x,y){
+			c.moveTo(x,y);
+			return this;
+		},
+		fill : function(){
+			c.fill();
+			return this;
+		},
+		stroke : function(){
+			c.stroke();
+			return this;
+		},
+		closePath : function(){
+			c.closePath();
+			return this;
+		},
+
+		// Shapes
+
+		Rectangle : function(custom){
+			var o = extend(defOptions,{
+				width: 100,
+				height : 50
+			},custom);
+
+			lapiz
+			.setStyles(o)
+			.beginPath()
+			.moveTo(o.x,o.y)
+			.lineTo(o.x+o.width,o.y)
+			.lineTo(o.x+o.width,o.y+o.height)
+			.lineTo(o.x,o.y+o.height)
+			.lineTo(o.x,o.y)
+			.fill()
+			.stroke()
+			.closePath();
+
+			return this;
+		},
+
 		mostrar : function(){
-			
+			return this;
 		}
 	};
 
 	window.lapiz = lapiz.init();
 })();
-
-kt = function(str){
-	console.log(str);
-};

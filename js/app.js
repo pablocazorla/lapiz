@@ -1,20 +1,23 @@
-var cosa1 = lapiz.sprite('Rectangle',{
-	fillStyle : 'red'
+var cosa1 = lapiz.sprite(function(){
+	lapiz.Rectangle();
 });
+
+
+
 cosa1.appendTo('my-canvas');
-var cosa2 = lapiz.sprite('Rectangle',{
-	fillStyle : 'blue',
-	strokeStyle : '#FF0',
-	width : 60,
-	height : 40
-});
-var cosa3 = lapiz.sprite('Rectangle',{
-	fillStyle : '#FF0',
-	x : -70,
-	y : -15,
-	width : 140,
-	height : 25
-});
+
+
+
+
+
+
+
+
+
+/*var cosa1 = lapiz.sprite();
+cosa1.appendTo('my-canvas');
+var cosa2 = lapiz.sprite();
+var cosa3 = lapiz.sprite();
 cosa2.appendTo(cosa1);
 cosa3.appendTo(cosa2);
 cosa1.x = -5;
@@ -28,6 +31,7 @@ setInterval(function(){
 	cosa3.rotation += 4;
 	cosa1.x += 1;
 },30);
+*/
 /*
 {
 	'fillStyle':'#FFFFFF',
