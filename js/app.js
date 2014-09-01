@@ -1,17 +1,57 @@
-var cosa1 = lapiz.sprite(function(){
-	lapiz.Rectangle();
-});
+var posY = 100;
+lapiz.Rectangle({
+	fillStyle : 'red'
+})
+.setStyles({
+	fillStyle : 'rgba(0,0,255,.5)'
+})
+.beginPath()
+.moveTo(100,100)
+.lineTo(200,posY)
+.lineTo(100,200)
+.lineTo(100,100)
+.endShape()
+.closePath();
 
 
-
-cosa1.appendTo('my-canvas');
-
-
-
-
-
-
-
+lapiz.sprite(function(){
+	lapiz.Rectangle({
+		fillStyle : 'red',
+		strokeStyle : 'transparent'		
+	})
+	.Circle({
+		x : 200,
+		y : 100
+	})
+	.Rectangle({
+		fillStyle : 'green',
+		strokeStyle : 'red',
+		x : 50,
+		height: 200,
+		y:45
+	})
+	.setStyles({
+		fillStyle : 'rgba(0,0,255,.5)'
+	})
+	.beginPath()
+	.moveTo(100,100)
+	.lineTo(200,posY)
+	.lineTo(100,200)
+	.lineTo(100,100)
+	.endShape()
+	.closePath();
+})
+.transform({
+	x : 200,
+	y : 200
+})
+/*
+.onEnterFrame(function(){
+	this.rotation++;
+	posY++;
+})
+*/
+.appendTo('my-canvas');
 
 
 /*var cosa1 = lapiz.sprite();

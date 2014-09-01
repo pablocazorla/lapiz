@@ -97,8 +97,6 @@
 			}
 		},
 
-		
-
 		/*
 		 * Private Classes *******************************************************************************************************
 		*/
@@ -154,6 +152,9 @@
 		},
 		render : function(){
 			c = this.context;
+			lapiz.width = this.node.width;
+			lapiz.height = this.node.height;
+
 			c.setTransform(1,0,0,1,0,0);
 			c.clearRect(0,0,this.node.width,this.node.height);
 			for(var i = 0; i < this.length; i++){
@@ -222,15 +223,24 @@
 			return this;
 		},
 		transform : function(coordinates){
-
+			for(var a in coordinates){
+				if(typeof this[a] != 'undefined'){
+					this[a] = coordinates[a];
+				}
+			}
+			return this;
 		},
 		render : function(){
-			var rotRadians = this.rotation * Math.PI/180;
+			var self = this,
+				rotRadians = this.rotation * Math.PI/180;
 			// Set Coordinates
 			c.translate(this.x,this.y);			
 			c.rotate(rotRadians);
 			c.scale(this.xScale,this.yScale);
 
+			for(var ef = 0;ef < this.enterFrameEvent.length; ef++){
+				this.enterFrameEvent.handlers[ef].apply(this, [self]);
+			}
 			// Render
 			this.shp();
 
@@ -245,7 +255,16 @@
 			c.translate(-this.x,-this.y);
 
 			return this;
-		}
+		},
+		enterFrameEvent : {
+			handlers : [],
+			length : 0
+		},
+		onEnterFrame : function(handler){
+			this.enterFrameEvent.handlers.push(handler);
+			this.enterFrameEvent.length++;
+			return this;
+		},
 	};
 
 	/*
@@ -253,7 +272,14 @@
 	*/
 	var lapiz = {
 		timeFrameRender : null,
-		init : function(){		
+		width : 0,
+		height : 0,
+		init : function(){
+			var cnv = document.getElementsByTagName('canvas');
+			if(cnv.length>0){
+				this.setCanvas(cnv[0]);
+			}
+				
 			return this;
 		},	
 		sprite : function(shapeFunction,options){			
@@ -267,6 +293,13 @@
 				var newCanvas = canvasList.newCanvas(selection);
 				return newCanvas;
 			}
+		},
+		setCanvas : function(selection){
+			var theCanvas = this.getCanvas(selection);
+			c = theCanvas.context;
+			this.width = theCanvas.node.width;
+			this.height = theCanvas.node.height;
+			return this;
 		},
 		verifySpriteMode : function(){
 			var numSprites = canvasList.getNumSprites();
@@ -288,7 +321,7 @@
 		},
 
 		// Drawing		
-		setStyles = function(o){
+		setStyles : function(o){
 			for(var a in o){
 				if(typeof c[a] != 'undefined'){
 					c[a] = o[a];
@@ -305,7 +338,11 @@
 			return this;
 		},
 		lineTo : function(x,y){
-			c.moveTo(x,y);
+			c.lineTo(x,y);
+			return this;
+		},
+		arc : function(x, y, radius, startAngle, endAngle, counterClockwise){
+			c.arc(x, y, radius, startAngle, endAngle, counterClockwise);
 			return this;
 		},
 		fill : function(){
@@ -320,27 +357,39 @@
 			c.closePath();
 			return this;
 		},
+		rect : function(x, y, width, height){
+			c.rect(x, y, width, height);
+			return this;
+		},
 
 		// Shapes
-
+		endShape : function(){
+			this.fill().stroke();
+			return this;
+		},
 		Rectangle : function(custom){
 			var o = extend(defOptions,{
 				width: 100,
 				height : 50
 			},custom);
-
-			lapiz
+			this
 			.setStyles(o)
-			.beginPath()
-			.moveTo(o.x,o.y)
-			.lineTo(o.x+o.width,o.y)
-			.lineTo(o.x+o.width,o.y+o.height)
-			.lineTo(o.x,o.y+o.height)
-			.lineTo(o.x,o.y)
-			.fill()
-			.stroke()
-			.closePath();
-
+			.beginPath()		
+			.rect(o.x, o.y, o.width, o.height)
+			.closePath()
+			.endShape();
+			return this;
+		},
+		Circle : function(custom){
+			var o = extend(defOptions,{
+				radius : 20
+			},custom);
+			this
+			.setStyles(o)
+			.beginPath()			
+			.arc(o.x, o.y, o.radius, 0, Math.PI * 2)
+			.closePath()
+			.endShape();
 			return this;
 		},
 
