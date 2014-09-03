@@ -43,7 +43,8 @@ var cosa = lapiz.sprite(function(){
 })
 .transform({
 	x : 200,
-	y : 200
+	y : 200,
+	rotation : 60
 })
 /*
 .onEnterFrame(function(){
@@ -53,8 +54,26 @@ var cosa = lapiz.sprite(function(){
 */
 .appendTo('my-canvas');
 
-cosa.mousemove(function(e){
-	console.log(this);
+
+cosa2 = lapiz.sprite(function(){
+	lapiz.Rectangle({
+		fillStyle : '#FF0',
+		strokeStyle : 'black'		
+	});
+}).transform({
+	x : 250
+});
+
+
+
+cosa.append(cosa2).on('click',function(e){
+	console.log('----------');
+	console.log('soy cosa 1');
+});
+
+
+cosa2.on('click',function(e){
+	console.log('soy cosa 2');
 });
 
 
