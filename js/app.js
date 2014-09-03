@@ -1,5 +1,5 @@
 var posY = 100;
-lapiz.Rectangle({
+/*lapiz.Rectangle({
 	fillStyle : 'red'
 })
 .setStyles({
@@ -12,9 +12,9 @@ lapiz.Rectangle({
 .lineTo(100,100)
 .endShape()
 .closePath();
+*/
 
-
-lapiz.sprite(function(){
+var cosa = lapiz.sprite(function(){
 	lapiz.Rectangle({
 		fillStyle : 'red',
 		strokeStyle : 'transparent'		
@@ -52,6 +52,11 @@ lapiz.sprite(function(){
 })
 */
 .appendTo('my-canvas');
+
+cosa.mousemove(function(e){
+	console.log(this);
+});
+
 
 
 /*var cosa1 = lapiz.sprite();
