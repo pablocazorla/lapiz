@@ -184,8 +184,6 @@
 			lapiz.width = this.node.width;
 			lapiz.height = this.node.height;
 			c = this.context;
-
-
 			c.setTransform(1, 0, 0, 1, 0, 0);
 			c.clearRect(0, 0, this.node.width, this.node.height);
 			for (var i = 0; i < this.length; i++) {
@@ -193,11 +191,7 @@
 
 				this.childs[i].render();
 			}
-			this.eventInfo = {
-				type: null,
-				x: 0,
-				y: 0
-			}
+			this.eventInfo.type = null;
 		},
 		// Mouse Events
 		setMouseEvents: function() {
@@ -212,6 +206,10 @@
 					};
 				});
 			}
+			return this;
+		},
+		cursor: function(styleCursor) {
+			this.node.style.cursor = styleCursor;
 			return this;
 		}
 	};
@@ -319,7 +317,11 @@
 
 			// Render
 			overMouse = false;
-			eventMouseInfo = this.parentCanvas.eventInfo;
+
+			eventMouseInfo.type = this.parentCanvas.eventInfo.type;
+			eventMouseInfo.x = this.parentCanvas.eventInfo.x;
+			eventMouseInfo.y = this.parentCanvas.eventInfo.y;
+
 			this.shp();
 			this.overMouse = overMouse;
 
@@ -376,22 +378,28 @@
 		mouseout: function(handler) {
 			return this.on('mouseout', handler);
 		},
+		hover: function(handlerOver, handlerOut) {
+			this.on('mouseover', handlerOver);
+			if (handlerOut) {
+				this.on('mouseout', handlerOut);
+			}
+			return this;
+		},
 		fireEvents: function() {
 			if (this.parentCanvas != null) {
 				var self = this;
 				for (var i = 0; i < this.mouseEventList.length; i++) {
 					if (self.overMouse) {
-						console.log(self.preOverMouse);
 						switch (this.mouseEventList[i].type) {
 							case 'mouseover':
-								if(!self.preOverMouse && self.overMouse){
+								if (!self.preOverMouse && self.overMouse) {
 									eventMouseInfo.type = 'mouseover';
 									this.mouseEventList[i].handler.apply(self, [eventMouseInfo]);
 								}
 								break;
-							case 'mouseout':
-								if(self.preOverMouse && !self.overMouse){
-									eventMouseInfo.type = 'mouseout';
+							case 'mouseup':
+								if (eventMouseInfo.type == 'click' || eventMouseInfo.type == 'mouseup') {
+									eventMouseInfo.type = 'mouseup';
 									this.mouseEventList[i].handler.apply(self, [eventMouseInfo]);
 								}
 								break;
@@ -400,10 +408,13 @@
 									this.mouseEventList[i].handler.apply(self, [eventMouseInfo]);
 								}
 						}
-					}else{
-
+					} else {
+						if (self.preOverMouse && this.mouseEventList[i].type == 'mouseout') {
+							eventMouseInfo.type = 'mouseout';
+							this.mouseEventList[i].handler.apply(self, [eventMouseInfo]);
+						}
 					}
-				}				
+				}
 			}
 			return this;
 		}
@@ -416,6 +427,7 @@
 		timeFrameRender: null,
 		width: 0,
 		height: 0,
+		extendObject: extend,
 		init: function() {
 			var cnv = document.getElementsByTagName('canvas');
 			if (cnv.length > 0) {
@@ -502,6 +514,21 @@
 		rect: function(x, y, width, height) {
 			c.rect(x, y, width, height);
 			return this;
+		},
+		fillStyle: function(f) {
+			c.fillStyle = f;
+			return this;
+		},
+		fillText: function(text, x, y) {
+			c.fillText(text, x, y);
+			return this;
+		},
+		textBaseline: function(tb) {
+			c.textBaseline = tb;
+			return this;
+		},
+		measureText: function(text) {
+			return c.measureText(text);
 		},
 
 		// Shapes
