@@ -66,14 +66,17 @@ cosa2 = lapiz.sprite(function(){
 
 
 
-cosa.append(cosa2).on('click',function(e){
-	console.log('----------');
-	console.log('soy cosa 1');
-});
-
-
-cosa2.on('click',function(e){
-	console.log('soy cosa 2');
+cosa.append(cosa2).click(function(e){	
+	//console.log('soy cosa 1');
+})
+.mouseup(function(){
+	//console.log('muevo');
+})
+.mouseover(function(){
+	//console.log('over');
+})
+.mouseout(function(){
+	//console.log('out');
 });
 
 

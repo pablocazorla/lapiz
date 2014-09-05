@@ -46,7 +46,11 @@
 
 		// overMouse
 		overMouse = false,
-		eventMouseInfo = {type:null,x:0,y:0},
+		eventMouseInfo = {
+			type: null,
+			x: 0,
+			y: 0
+		},
 
 		// if use Sprites
 		spriteMode = false,
@@ -62,7 +66,7 @@
 		},
 
 		// Mouse Event list
-		MouseEventList = ['click','mousemove'],
+		MouseEventList = ['click', 'mousedown', 'mouseup', 'mousemove'],
 
 		/*
 		 * Private handlers *******************************************************************************************************
@@ -137,10 +141,12 @@
 				// Context
 				this.context = this.node.getContext('2d');
 				this.eventInfo = {
-					type : null, x:0, y:0
+					type: null,
+					x: 0,
+					y: 0
 				}
 				this.setMouseEvents();
-				
+
 			} else {
 				k('There is not canvas with id: ' + selection + '.');
 			}
@@ -178,17 +184,19 @@
 			lapiz.width = this.node.width;
 			lapiz.height = this.node.height;
 			c = this.context;
-						
+
 
 			c.setTransform(1, 0, 0, 1, 0, 0);
 			c.clearRect(0, 0, this.node.width, this.node.height);
 			for (var i = 0; i < this.length; i++) {
 				c.setTransform(1, 0, 0, 1, 0, 0);
-				
+
 				this.childs[i].render();
 			}
 			this.eventInfo = {
-				type : null, x:0, y:0
+				type: null,
+				x: 0,
+				y: 0
 			}
 		},
 		// Mouse Events
@@ -196,11 +204,11 @@
 			var self = this;
 			for (var i = 0; i < MouseEventList.length; i++) {
 				on(self, MouseEventList[i], function(evt) {
-					var rect = self.node.getBoundingClientRect();					
+					var rect = self.node.getBoundingClientRect();
 					self.eventInfo = {
-						type : evt.type,
-						x : Math.round(evt.clientX - rect.left),
-						y : Math.round(evt.clientY - rect.top)
+						type: evt.type,
+						x: Math.round(evt.clientX - rect.left),
+						y: Math.round(evt.clientY - rect.top)
 					};
 				});
 			}
@@ -230,6 +238,7 @@
 			this.mouseEvents = false;
 			this.mouseEventList = [];
 			this.overMouse = false;
+			this.preOverMouse = false;
 
 			return this;
 		},
@@ -289,9 +298,9 @@
 			}
 			return this;
 		},
-		blowOverMouse : function(){
-			if(this.parent != null){
-				if(this.parent.type == 'sprite'){
+		blowOverMouse: function() {
+			if (this.parent != null) {
+				if (this.parent.type == 'sprite') {
 					this.parent.overMouse = true;
 					this.parent.blowOverMouse();
 				}
@@ -313,10 +322,10 @@
 			eventMouseInfo = this.parentCanvas.eventInfo;
 			this.shp();
 			this.overMouse = overMouse;
-			
-			if(overMouse){
+
+			if (overMouse) {
 				this.blowOverMouse();
-			}			
+			}
 
 			// Render Childs
 			for (var i = 0; i < this.length; i++) {
@@ -324,7 +333,7 @@
 			}
 
 			this.fireEvents();
-
+			this.preOverMouse = this.overMouse;
 			// Restore Coordinates
 			c.scale(1 / this.xScale, 1 / this.yScale);
 			c.rotate(-rotRadians);
@@ -342,20 +351,59 @@
 			return this;
 		},
 		// Mouse Events
-		on : function(eventName,handler){
+		on: function(eventName, handler) {
 			this.mouseEventList.push({
-				type : eventName,
-				handler : handler
+				type: eventName,
+				handler: handler
 			});
+			return this;
 		},
-		fireEvents : function(){
-			if(this.parentCanvas != null){
+		click: function(handler) {
+			return this.on('click', handler);
+		},
+		mousemove: function(handler) {
+			return this.on('mousemove', handler);
+		},
+		mousedown: function(handler) {
+			return this.on('mousedown', handler);
+		},
+		mouseup: function(handler) {
+			return this.on('mouseup', handler);
+		},
+		mouseover: function(handler) {
+			return this.on('mouseover', handler);
+		},
+		mouseout: function(handler) {
+			return this.on('mouseout', handler);
+		},
+		fireEvents: function() {
+			if (this.parentCanvas != null) {
 				var self = this;
 				for (var i = 0; i < this.mouseEventList.length; i++) {
-					if(eventMouseInfo.type == this.mouseEventList[i].type && self.overMouse){						
-						this.mouseEventList[i].handler.apply(self, [eventMouseInfo])
+					if (self.overMouse) {
+						console.log(self.preOverMouse);
+						switch (this.mouseEventList[i].type) {
+							case 'mouseover':
+								if(!self.preOverMouse && self.overMouse){
+									eventMouseInfo.type = 'mouseover';
+									this.mouseEventList[i].handler.apply(self, [eventMouseInfo]);
+								}
+								break;
+							case 'mouseout':
+								if(self.preOverMouse && !self.overMouse){
+									eventMouseInfo.type = 'mouseout';
+									this.mouseEventList[i].handler.apply(self, [eventMouseInfo]);
+								}
+								break;
+							default:
+								if (eventMouseInfo.type == this.mouseEventList[i].type) {
+									this.mouseEventList[i].handler.apply(self, [eventMouseInfo]);
+								}
+						}
+					}else{
+
 					}
-				}
+				}				
 			}
 			return this;
 		}
@@ -459,10 +507,10 @@
 		// Shapes
 		endShape: function() {
 			this.fill().stroke();
-			if(c.isPointInPath(eventMouseInfo.x, eventMouseInfo.y)){
+			if (c.isPointInPath(eventMouseInfo.x, eventMouseInfo.y)) {
 				overMouse = true;
 			}
-			
+
 			return this;
 		},
 		Rectangle: function(custom) {
