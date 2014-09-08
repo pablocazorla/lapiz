@@ -441,8 +441,11 @@
 								break;
 							case 'mouseup':
 								if (eventMouseInfo.type == 'click' || eventMouseInfo.type == 'mouseup') {
-									eventMouseInfo.type = 'mouseup';
-									this.mouseEventList[i].handler.apply(self, [eventMouseInfo]);
+									this.mouseEventList[i].handler.apply(self, [{
+										type : 'mouseup',
+										x : eventMouseInfo.x,
+										y : eventMouseInfo.y
+									}]);
 								}
 								break;
 							default:
@@ -471,6 +474,7 @@
 		height: 0,
 		extendObject: extend,
 		stringNumberToArray: stringNumberToArray,
+		valueToReturn : false,
 		init: function() {
 			var cnv = document.getElementsByTagName('canvas');
 			if (cnv.length > 0) {
@@ -517,7 +521,7 @@
 			return this;
 		},
 
-		// Drawing		
+		// Style		
 		setStyles: function(o) {
 			for (var a in o) {
 				if (typeof c[a] != 'undefined') {
@@ -526,6 +530,76 @@
 			}
 			return this;
 		},
+		fillStyle: function(v) {
+			c.fillStyle = v;
+			return this;
+		},
+		strokeStyle: function() {
+			return this;
+		},
+		font: function(v) {
+			c.font = v;
+			return this;
+		},
+		textBaseline: function(v) {
+			c.textBaseline = v;
+			return this;
+		},
+		textAlign: function(v) {
+			c.textAlign = v;
+			return this;
+		},
+		lineJoin: function(v) {
+			c.lineJoin = v;
+			return this;
+		},
+		lineWidth: function(v) {
+			c.lineWidth = v;
+			return this;
+		},
+		lineDashOffset: function(v) {
+			c.lineDashOffset = v;
+			return this;
+		},
+		lineCap: function(v) {
+			c.lineDashOffset = v;
+			return this;
+		},
+		miterLimit: function(v) {
+			c.lineDashOffset = v;
+			return this;
+		},
+		globalAlpha: function(v) {
+			c.lineDashOffset = v;
+			return this;
+		},
+		globalCompositeOperation: function(v) {
+			c.lineDashOffset = v;
+			return this;
+		},
+		shadowColor: function(v) {
+			c.shadowColor = v;
+			return this;
+		},
+		shadowBlur: function(v) {
+			c.shadowBlur = v;
+			return this;
+		},
+		shadowOffsetX: function(v) {
+			c.shadowOffsetX = v;
+			return this;
+		},
+		shadowOffsetY: function(v) {
+			c.shadowOffsetY = num;
+			return this;
+		},
+		// Compound Styles
+		shadow: function(strOrArray) {
+			//
+			return this;
+		},
+
+		// Paths
 		beginPath: function() {
 			c.beginPath();
 			return this;
@@ -542,22 +616,16 @@
 			c.arc(x, y, radius, startAngle, endAngle, counterClockwise);
 			return this;
 		},
-		arcTo: function() {
+		arcTo: function(x1, y1, x2, y2, radius) {
+			c.arcTo(x1, y1, x2, y2, radius);
 			return this;
 		},
 		quadraticCurveTo: function(xCtrl, yCtrl, x, y) {
 			c.quadraticCurveTo(xCtrl, yCtrl, x, y);
 			return this;
 		},
-		bezierCurveTo: function() {
-			return this;
-		},
-		fill: function() {
-			c.fill();
-			return this;
-		},
-		stroke: function() {
-			c.stroke();
+		bezierCurveTo: function(xCtrl1, yCtrl1, xCtrl2, yCtrl2, x, y) {
+			c.bezierCurveTo(xCtrl1, yCtrl1, xCtrl2, yCtrl2, x, y);
 			return this;
 		},
 		closePath: function() {
@@ -568,51 +636,146 @@
 			c.rect(x, y, width, height);
 			return this;
 		},
-		fillStyle: function(f) {
-			c.fillStyle = f;
+		fillRect: function(x, y, width, height) {
+			c.fillRect(x, y, width, height);
 			return this;
 		},
+		strokeRect: function(x, y, width, height) {
+			c.strokeRect(x, y, width, height);
+			return this;
+		},
+		clearRect: function() {
+			c.clearRect(x, y, width, height);
+			return this;
+		},
+		fill: function() {
+			if(this.valueToReturn){
+				c.fillStyle = this.valueToReturn;
+				this.valueToReturn = false;
+			}
+			c.fill();
+			if (c.isPointInPath(eventMouseInfo.x, eventMouseInfo.y)) {
+				overMouse = true;
+			}
+			return this;
+		},
+		stroke: function() {
+			if(this.valueToReturn){
+				c.strokeStyle = this.valueToReturn;
+				this.valueToReturn = false;
+			}
+			c.stroke();
+			if (c.isPointInPath(eventMouseInfo.x, eventMouseInfo.y)) {
+				overMouse = true;
+			}
+			return this;
+		},
+		endShape: function() {
+			this.fill().stroke();
+			return this;
+		},
+
+		// Text
 		fillText: function(text, x, y) {
 			c.fillText(text, x, y);
 			return this;
 		},
-		textBaseline: function(tb) {
-			c.textBaseline = tb;
+		strokeText: function(text, x, y) {
+			c.strokeText(text, x, y);
 			return this;
 		},
-		measureText: function(text) {
+		measureText: function(text) {			
 			return c.measureText(text);
 		},
-		shadowColor: function(str) {
-			c.shadowColor = str;
+		textWidth: function(text) {			
+			return c.measureText(text).width;
+		},
+
+		// gradients
+		createLinearGradient: function(x1,y1,x2,y2) {
+			this.valueToReturn = c.createLinearGradient(x1,y1,x2,y2);
 			return this;
 		},
-		shadowBlur: function(num) {
-			c.shadowBlur = num;
+		createRadialGradient: function(x1,y1,r1,x2,y2,r2) {
+			this.valueToReturn = c.createRadialGradient(x1,y1,r1,x2,y2,r2);
 			return this;
 		},
-		shadowOffsetX: function(num) {
-			c.shadowOffsetX = num;
+		addColorStop: function(point,color) {
+			this.valueToReturn.addColorStop(point,color);
 			return this;
 		},
-		shadowOffsetY: function(num) {
-			c.shadowOffsetY = num;
+		returnValue : function() {
+			var r = this.valueToReturn;
+			this.valueToReturn = false;
+			return r;
+		},
+		// Compound Gradients
+		linearGradient: function(x1,y1,x2,y2,colors) {
+			if(typeof colors == 'string'){
+				this.valueToReturn = colors;
+			}else{
+				this.createLinearGradient(x1,y1,x2,y2);
+				for(var a in colors){
+					this.addColorStop(parseInt(a),colors[a])
+				}
+			}			
 			return this;
 		},
-		shadow: function(strOrArray) {
-			//
+		radialGradient: function(x1,y1,r1,x2,y2,r2,colors) {
+			if(typeof colors == 'string'){
+				this.valueToReturn = colors;
+			}else{
+				this.createRadialGradient(x1,y1,r1,x2,y2,r2);
+				for(var a in colors){
+					this.addColorStop(parseInt(a),colors[a])
+				}
+			}			
 			return this;
 		},
 
-		// Shapes
-		endShape: function() {
-			this.fill().stroke();
-			if (c.isPointInPath(eventMouseInfo.x, eventMouseInfo.y)) {
-				overMouse = true;
-			}
+		// pattern
+		createPattern: function(img,rep) {
+			this.valueToReturn = c.createPattern(img,rep);
+			return 
+		},
 
+		// STATE STACK
+		save: function() {
+			c.save();
 			return this;
 		},
+		restore: function() {
+			c.restore();
+			return this;
+		},
+
+		// Clip
+		clip: function() {
+			c.clip();
+			return this;
+		},
+
+		// data url
+		toDataURL: function() {
+			return c.toDataURL();
+		},
+
+		// Images
+		drawImage: function() {
+			c.drawImage();
+			return this;
+		},
+		createImageData: function() {
+			return this;
+		},
+		getImageData: function() {
+			return this;
+		},
+		putImageData: function() {
+			return this;
+		},
+
+		// Compound Shapes		
 		Rectangle: function(custom) {
 			var o = extend(defOptions, {
 					width: 100,

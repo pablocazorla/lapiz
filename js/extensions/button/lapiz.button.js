@@ -1,6 +1,7 @@
 ;
 (function() {
 	lapiz.button = function(options) {
+		
 
 		var cfg = {
 				text: 'Button',
@@ -9,21 +10,30 @@
 				style: {
 					common: {
 						'padding': '8px 15px',
-						'fillStyle': '#02F',
-						'strokeStyle': '#F00',
-						'lineWidth': 4,
-						'color': '#999',
+						'fillStyle': {
+							'0': 'black',
+							'1': 'green'
+						},
+						'strokeStyle': '#666',
+						'lineWidth': 1,
+						'color': '#EEE',
 						'font': '16px sans-serif',
 						'textBaseline': 'middle',
 						'textAlign': 'center',
 						'borderRadius': '10px'
 					},
 					hover: {
-						'fillStyle': '#0DF',
+						'fillStyle': {
+							'0': 'yellow',
+							'1': 'red'
+						},
 						'strokeStyle': '#00F'
 					},
 					active: {
-						'fillStyle': '#022',
+						'fillStyle': {
+							'0': 'orange',
+							'1': 'black'
+						},
 						'strokeStyle': '#00F'
 					},
 					disabled: {
@@ -34,40 +44,29 @@
 				}
 			},
 			enabledBtn = true,
+			sty = 'common',
 
 			btn = lapiz.sprite();
 
 		/**********************************************************/
-		btn._draw = function(sty) {
+		btn._draw = function() {
 			var prop = lapiz.extendObject(cfg.style.common, cfg.style[sty]),
 				padding = lapiz.stringNumberToArray(prop.padding),
-				br = lapiz.stringNumberToArray(prop.borderRadius),
-				metr = lapiz
-				.setStyles({
-					'font': prop.font
-				}).measureText(cfg.text);
-			prop.width = metr.width + padding[3] + padding[1],
+				br = lapiz.stringNumberToArray(prop.borderRadius);
+
+			prop.width = lapiz.setStyles({
+				'font': prop.font
+			}).textWidth(cfg.text) + padding[3] + padding[1],
 			prop.height = parseInt(prop.font) + padding[0] + padding[2];
 
-			btn.shape(function() {
-				//background
-				/*lapiz
-					.setStyles(prop)
-					.beginPath()
-					.moveTo(0, 0)
-					.lineTo(w, 0)
-					.lineTo(w, h)
-					.lineTo(0, h)
-					.lineTo(0, 0)
-					.closePath()
-					.endShape();
-					*/
+			prop.fillStyle = lapiz.linearGradient(0, 0, 0, prop.height, prop.fillStyle).returnValue();
 
+
+			btn.shape(function() {
 				lapiz
 					.Rectangle(prop)
 					.fillStyle(prop.color)
 					.fillText(cfg.text, prop.width / 2, prop.height / 2);
-
 			});
 			return btn;
 		};
@@ -75,7 +74,7 @@
 			cfg = lapiz.extendObject(cfg, opt);
 			btn.x = cfg.x;
 			btn.y = cfg.y;
-			btn._draw('common');
+			btn._draw();
 			return btn;
 		};
 		btn.disabledProp = false;
@@ -83,35 +82,49 @@
 			if (typeof opt == 'boolean') {
 				btn.disabledProp = opt;
 				if (opt) {
-					btn._draw('disabled');
+					sty = 'disabled';
+					btn._draw();
 				} else {
-					btn._draw('common');
+					sty = 'common';
+					btn._draw();
 				}
 				return btn;
 			} else {
 				return btn.disabledProp;
 			}
 		};
+		btn.text = function(txt) {
+			if(typeof txt == 'undefined'){
+				return cfg.text;
+			}else{
+				cfg.text = txt;
+				return btn._draw();
+			}
+		}
 
 		/**********************************************************/
 		btn.update(options)
 			.hover(function() {
 				if (!btn.disabledProp) {
-					btn._draw('hover').parentCanvas.cursor('pointer');
+					sty = 'hover';
+					btn._draw().parentCanvas.cursor('pointer');
 				};
 			}, function() {
 				if (!btn.disabledProp) {
-					btn._draw('common').parentCanvas.cursor('default');
+					sty = 'common';
+					btn._draw().parentCanvas.cursor('default');
 				};
 			})
 			.mousedown(function() {
 				if (!btn.disabledProp) {
-					btn._draw('active');
+					sty = 'active';
+					btn._draw();
 				};
 			})
 			.mouseup(function() {
 				if (!btn.disabledProp) {
-					btn._draw('hover');
+					sty = 'hover';
+					btn._draw();
 				};
 			});
 

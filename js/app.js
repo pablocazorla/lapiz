@@ -1,29 +1,27 @@
 var myButton = lapiz.button({
-	x : 200,
-	y : 100
+	x: 200,
+	y: 100
 });
 
 myButton.appendTo('my-canvas');
 
 
 
-var rd = lapiz.sprite(function(){	
+var rd = lapiz.sprite(function() {
 	lapiz.Rectangle({
-		x : 100,
-		y : 300
+		x: 100,
+		y: 300
 	});
 });
 
 
 
-
-
 rd.appendTo('my-canvas');
 
+var count = 0;
 
 
-
-
-myButton.click(function(){
-	console.log('va1');
+myButton.click(function() {
+	count++;
+	this.text('Mendocino '+count);
 });
