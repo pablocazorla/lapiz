@@ -8,29 +8,28 @@
 				y: 0,
 				style: {
 					common: {
-						'paddingTop': 8,
-						'paddingBottom': 8,
-						'paddingLeft': 15,
-						'paddingRight': 15,
-						'backgroundColor': '#02F',
-						'borderColor': '#F00',
-						'borderWidth': 2,
+						'padding': '8px 15px',
+						'fillStyle': '#02F',
+						'strokeStyle': '#F00',
+						'lineWidth': 4,
 						'color': '#999',
-						'fontFamily': 'sans-serif',
-						'fontSize': 16
+						'font': '16px sans-serif',
+						'textBaseline': 'middle',
+						'textAlign': 'center',
+						'borderRadius': '10px'
 					},
 					hover: {
-						'backgroundColor': '#0DF',
-						'borderColor': '#00F'
+						'fillStyle': '#0DF',
+						'strokeStyle': '#00F'
 					},
 					active: {
-						'backgroundColor': '#022',
-						'borderColor': '#00F'
+						'fillStyle': '#022',
+						'strokeStyle': '#00F'
 					},
 					disabled: {
-						'backgroundColor': '#888',
-						'borderColor': '#00F',
-						'textColor': '#AAA'
+						'fillStyle': '#888',
+						'strokeStyle': '#00F',
+						'color': '#AAA'
 					}
 				}
 			},
@@ -40,25 +39,20 @@
 
 		/**********************************************************/
 		btn._draw = function(sty) {
-			var prop = lapiz.extendObject(cfg.style.common, cfg.style[sty]);
-			var metr = lapiz
+			var prop = lapiz.extendObject(cfg.style.common, cfg.style[sty]),
+				padding = lapiz.stringNumberToArray(prop.padding),
+				br = lapiz.stringNumberToArray(prop.borderRadius),
+				metr = lapiz
 				.setStyles({
-					'font': prop.fontSize + 'px ' + prop.fontFamily
-				}).measureText(cfg.text),
-				w = metr.width + prop.paddingLeft + prop.paddingRight,
-				h = prop.fontSize + prop.paddingTop + prop.paddingBottom;
+					'font': prop.font
+				}).measureText(cfg.text);
+			prop.width = metr.width + padding[3] + padding[1],
+			prop.height = parseInt(prop.font) + padding[0] + padding[2];
 
 			btn.shape(function() {
 				//background
-				lapiz
-					.setStyles({
-						'fillStyle': prop.backgroundColor,
-						'strokeStyle': prop.borderColor,
-						'lineWidth': prop.borderWidth,
-						'font': prop.fontSize + 'px ' + prop.fontFamily,
-						'textBaseline': 'middle',
-						'textAlign': 'center'
-					})
+				/*lapiz
+					.setStyles(prop)
 					.beginPath()
 					.moveTo(0, 0)
 					.lineTo(w, 0)
@@ -66,9 +60,13 @@
 					.lineTo(0, h)
 					.lineTo(0, 0)
 					.closePath()
-					.endShape()
+					.endShape();
+					*/
+
+				lapiz
+					.Rectangle(prop)
 					.fillStyle(prop.color)
-					.fillText(cfg.text, w / 2, h / 2);
+					.fillText(cfg.text, prop.width / 2, prop.height / 2);
 
 			});
 			return btn;

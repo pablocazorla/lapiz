@@ -36,6 +36,34 @@
 		on = function(eventTarget, eventType, eventHandler) {
 			eventTarget.node.addEventListener(eventType, eventHandler, false);
 		},
+		stringNumberToArray = function(str) {
+			if (typeof str != 'string') {
+				return [str, str, str, str];
+			} else {
+				var arr = str.split(' '),
+					v1, v2, v3, v4;
+				switch (arr.length) {
+					case 2:
+						v1 = v3 = parseInt(arr[0]);
+						v2 = v4 = parseInt(arr[1]);
+						break;
+					case 3:
+						v1 = parseInt(arr[0]);
+						v2 = v4 = parseInt(arr[1]);
+						v3 = parseInt(arr[2]);
+						break;
+					case 4:
+						v1 = parseInt(arr[0]);
+						v2 = parseInt(arr[1]);
+						v3 = parseInt(arr[2]);
+						v4 = parseInt(arr[3]);
+						break;
+					default:
+						v1 = v2 = v3 = v4 = parseInt(arr[0]);
+				}
+				return [v1, v2, v3, v4];
+			}
+		},
 
 		/*
 		 * Private variables *******************************************************************************************************
@@ -59,10 +87,24 @@
 		idCounter = 0,
 
 		defOptions = {
-			x: 10,
-			y: 10,
+			x: 0,
+			y: 0,
 			fillStyle: '#808080',
-			fillStroke: '#000'
+			font: '10px sans-serif',
+			globalAlpha: 1,
+			globalCompositeOperation: 'source-over',
+			lineCap: 'butt',
+			lineDashOffset: 0,
+			lineJoin: 'miter',
+			lineWidth: 1,
+			miterLimit: 10,
+			shadowBlur: 0,
+			shadowColor: 'rgba(0, 0, 0, 0)',
+			shadowOffsetX: 0,
+			shadowOffsetY: 0,
+			strokeStyle: '#000000',
+			textAlign: 'start',
+			textBaseline: 'alphabetic'
 		},
 
 		// Mouse Event list
@@ -428,6 +470,7 @@
 		width: 0,
 		height: 0,
 		extendObject: extend,
+		stringNumberToArray: stringNumberToArray,
 		init: function() {
 			var cnv = document.getElementsByTagName('canvas');
 			if (cnv.length > 0) {
@@ -499,6 +542,16 @@
 			c.arc(x, y, radius, startAngle, endAngle, counterClockwise);
 			return this;
 		},
+		arcTo: function() {
+			return this;
+		},
+		quadraticCurveTo: function(xCtrl, yCtrl, x, y) {
+			c.quadraticCurveTo(xCtrl, yCtrl, x, y);
+			return this;
+		},
+		bezierCurveTo: function() {
+			return this;
+		},
 		fill: function() {
 			c.fill();
 			return this;
@@ -530,6 +583,26 @@
 		measureText: function(text) {
 			return c.measureText(text);
 		},
+		shadowColor: function(str) {
+			c.shadowColor = str;
+			return this;
+		},
+		shadowBlur: function(num) {
+			c.shadowBlur = num;
+			return this;
+		},
+		shadowOffsetX: function(num) {
+			c.shadowOffsetX = num;
+			return this;
+		},
+		shadowOffsetY: function(num) {
+			c.shadowOffsetY = num;
+			return this;
+		},
+		shadow: function(strOrArray) {
+			//
+			return this;
+		},
 
 		// Shapes
 		endShape: function() {
@@ -542,13 +615,29 @@
 		},
 		Rectangle: function(custom) {
 			var o = extend(defOptions, {
-				width: 100,
-				height: 50
-			}, custom);
+					width: 100,
+					height: 50,
+					borderRadius: 0
+				}, custom),
+				b = (o.borderRadius == 0) ? 0 : stringNumberToArray(o.borderRadius);
 			this
 				.setStyles(o)
-				.beginPath()
-				.rect(o.x, o.y, o.width, o.height)
+				.beginPath();
+			if (b == 0) {
+				this.rect(o.x, o.y, o.width, o.height);
+			} else {
+				this
+					.moveTo(o.x + b[0], o.y)
+					.lineTo(o.x + o.width - b[1], o.y)
+					.quadraticCurveTo(o.x + o.width, o.y, o.x + o.width, o.y + b[1])
+					.lineTo(o.x + o.width, o.y + o.height - b[2])
+					.quadraticCurveTo(o.x + o.width, o.y + o.height, o.x + o.width - b[2], o.y + o.height)
+					.lineTo(o.x + b[3], o.y + o.height)
+					.quadraticCurveTo(o.x, o.y + o.height, o.x, o.y + o.height - b[3])
+					.lineTo(o.x, o.y + b[0])
+					.quadraticCurveTo(o.x, o.y, o.x + b[0], o.y);
+			}
+			this
 				.closePath()
 				.endShape();
 			return this;
