@@ -2,6 +2,11 @@
 ;
 (function() {
 
+	// Request Animation Frames
+	window.requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || function(callback) {
+		window.setTimeout(callback, 20);
+	};
+
 	var
 	/*
 	 * Utils *******************************************************************************************************
@@ -65,6 +70,8 @@
 			}
 		},
 
+
+
 		/*
 		 * Private variables *******************************************************************************************************
 		 */
@@ -109,6 +116,70 @@
 
 		// Mouse Event list
 		MouseEventList = ['click', 'mousedown', 'mouseup', 'mousemove'],
+
+		// Animation
+		animationCurves = (function() {
+			var defaultAc = 'ease',
+				delay = 10,
+
+				// Functions
+				quad = function(p, e) {
+					var exp = e || 2;
+					return Math.pow(p, exp)
+				},
+				bow = function(p, e) {
+					var exp = e || 1.5;
+					return Math.pow(p, 2) * ((exp + 1) * p - exp);
+				},
+				elastic = function(p, e) {
+					var exp = e || 1.5;
+					return Math.pow(2, 10 * (p - 1)) * Math.cos(20 * Math.PI * exp / 3 * p);
+				},
+
+				inverse = function(delta, p, e) {
+					return 1 - delta(1 - p, e);
+				},
+				inOut = function(delta, p, e) {
+					if (p < .5) {
+						return delta(2 * p, e) / 2;
+					} else {
+						return (2 - delta(2 * (1 - p), e)) / 2;
+					}
+				},
+
+				// Formulas
+				linear = function(p) {
+					return p;
+				},
+				ease = function(p) {
+					return inOut(quad, p, 2);
+				},
+				easeIn = function(p) {
+					return quad(p, 2.3);
+				},
+				easeOut = function(p) {
+					return inverse(quad, p, 2.3);
+				},
+				bounce = function(p, elast) {
+					var elasticity = 4/(elast || 1),
+						resolution = 9,
+						d = 1 - Math.pow(1 - p, elasticity) * Math.abs(Math.cos((p) * Math.PI * resolution * Math.pow(p, 1 / elasticity)));
+					if (isNaN(d)) {
+						d = p;
+					}
+					return d;
+				};
+
+			return {
+				defaultAc: defaultAc,
+				delay: delay,
+				linear: linear,
+				ease: ease,
+				easeIn: easeIn,
+				easeOut: easeOut,
+				bounce: bounce
+			};
+		})(),
 
 		/*
 		 * Private handlers *******************************************************************************************************
@@ -279,6 +350,7 @@
 			this.mouseEventList = [];
 			this.overMouse = false;
 			this.preOverMouse = false;
+			this.animationList = [];
 
 			return this;
 		},
@@ -442,9 +514,9 @@
 							case 'mouseup':
 								if (eventMouseInfo.type == 'click' || eventMouseInfo.type == 'mouseup') {
 									this.mouseEventList[i].handler.apply(self, [{
-										type : 'mouseup',
-										x : eventMouseInfo.x,
-										y : eventMouseInfo.y
+										type: 'mouseup',
+										x: eventMouseInfo.x,
+										y: eventMouseInfo.y
 									}]);
 								}
 								break;
@@ -462,6 +534,36 @@
 				}
 			}
 			return this;
+		},
+		animate: function(obj, duration, callback, delta, exp) {
+			var spr = this,
+				d = delta || lapiz.animationCurves.defaultAc,
+				cb = callback || function() {},
+				start = new Date,
+				initStatus = {};
+
+			for (var a in obj) {
+				initStatus[a] = spr[a];
+			};
+
+			var timer = setInterval(function() {
+				var progress = (new Date - start) / duration;
+				if (progress > 1) {
+					progress = 1;
+				}
+
+				var delta = lapiz.animationCurves[d](progress, exp);
+
+				for (var a in obj) {
+					spr[a] = initStatus[a] + delta * (obj[a] - initStatus[a]);
+				}
+
+				if (progress == 1) {
+					cb.apply(spr);
+					clearInterval(timer);
+				}
+			}, lapiz.animationCurves.delay);
+			return this;
 		}
 	};
 
@@ -469,12 +571,13 @@
 	 * Public Lapiz *******************************************************************************************************
 	 */
 	var lapiz = {
-		timeFrameRender: null,
 		width: 0,
 		height: 0,
 		extendObject: extend,
 		stringNumberToArray: stringNumberToArray,
-		valueToReturn : false,
+		valueToReturn: false,
+		animationCurves : animationCurves,
+
 		init: function() {
 			var cnv = document.getElementsByTagName('canvas');
 			if (cnv.length > 0) {
@@ -503,21 +606,19 @@
 			return this;
 		},
 		verifySpriteMode: function() {
-			var numSprites = canvasList.getNumSprites();
+			var numSprites = canvasList.getNumSprites(),
+				renderCanvas;
 			if (numSprites > 0) {
-				if (this.timeFrameRender == null) {
-					spriteMode = true;
-					this.timeFrameRender = setInterval(function() {
-						canvasList.render();
-					}, 20);
-				}
+				spriteMode = true;
+				renderCanvas = function() {
+					canvasList.render();
+					window.requestAnimationFrame(renderCanvas);
+				};
 			} else {
-				if (this.timeFrameRender != null) {
-					spriteMode = false;
-					clearInterval(this.timeFrameRender);
-					this.timeFrameRender = null;
-				}
+				renderCanvas = function() {};
+				spriteMode = false;
 			}
+			renderCanvas();
 			return this;
 		},
 
@@ -649,7 +750,7 @@
 			return this;
 		},
 		fill: function() {
-			if(this.valueToReturn){
+			if (this.valueToReturn) {
 				c.fillStyle = this.valueToReturn;
 				this.valueToReturn = false;
 			}
@@ -660,7 +761,7 @@
 			return this;
 		},
 		stroke: function() {
-			if(this.valueToReturn){
+			if (this.valueToReturn) {
 				c.strokeStyle = this.valueToReturn;
 				this.valueToReturn = false;
 			}
@@ -684,59 +785,59 @@
 			c.strokeText(text, x, y);
 			return this;
 		},
-		measureText: function(text) {			
+		measureText: function(text) {
 			return c.measureText(text);
 		},
-		textWidth: function(text) {			
+		textWidth: function(text) {
 			return c.measureText(text).width;
 		},
 
 		// gradients
-		createLinearGradient: function(x1,y1,x2,y2) {
-			this.valueToReturn = c.createLinearGradient(x1,y1,x2,y2);
+		createLinearGradient: function(x1, y1, x2, y2) {
+			this.valueToReturn = c.createLinearGradient(x1, y1, x2, y2);
 			return this;
 		},
-		createRadialGradient: function(x1,y1,r1,x2,y2,r2) {
-			this.valueToReturn = c.createRadialGradient(x1,y1,r1,x2,y2,r2);
+		createRadialGradient: function(x1, y1, r1, x2, y2, r2) {
+			this.valueToReturn = c.createRadialGradient(x1, y1, r1, x2, y2, r2);
 			return this;
 		},
-		addColorStop: function(point,color) {
-			this.valueToReturn.addColorStop(point,color);
+		addColorStop: function(point, color) {
+			this.valueToReturn.addColorStop(point, color);
 			return this;
 		},
-		returnValue : function() {
+		returnValue: function() {
 			var r = this.valueToReturn;
 			this.valueToReturn = false;
 			return r;
 		},
 		// Compound Gradients
-		linearGradient: function(x1,y1,x2,y2,colors) {
-			if(typeof colors == 'string'){
+		linearGradient: function(x1, y1, x2, y2, colors) {
+			if (typeof colors == 'string') {
 				this.valueToReturn = colors;
-			}else{
-				this.createLinearGradient(x1,y1,x2,y2);
-				for(var a in colors){
-					this.addColorStop(parseInt(a),colors[a])
+			} else {
+				this.createLinearGradient(x1, y1, x2, y2);
+				for (var a in colors) {
+					this.addColorStop(parseInt(a), colors[a])
 				}
-			}			
+			}
 			return this;
 		},
-		radialGradient: function(x1,y1,r1,x2,y2,r2,colors) {
-			if(typeof colors == 'string'){
+		radialGradient: function(x1, y1, r1, x2, y2, r2, colors) {
+			if (typeof colors == 'string') {
 				this.valueToReturn = colors;
-			}else{
-				this.createRadialGradient(x1,y1,r1,x2,y2,r2);
-				for(var a in colors){
-					this.addColorStop(parseInt(a),colors[a])
+			} else {
+				this.createRadialGradient(x1, y1, r1, x2, y2, r2);
+				for (var a in colors) {
+					this.addColorStop(parseInt(a), colors[a])
 				}
-			}			
+			}
 			return this;
 		},
 
 		// pattern
-		createPattern: function(img,rep) {
-			this.valueToReturn = c.createPattern(img,rep);
-			return 
+		createPattern: function(img, rep) {
+			this.valueToReturn = c.createPattern(img, rep);
+			return
 		},
 
 		// STATE STACK
