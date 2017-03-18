@@ -1,7 +1,7 @@
 /* CANVAS *****************************/
 lapiz.ctx = null;
 
-var canvas = {
+lapiz.canvas = {
 	node:null,
 	ctx:null,
 	width:0,
@@ -16,6 +16,8 @@ var canvas = {
 		this.node = cnv;
 		this.width = cnv.width;
 		this.height = cnv.height;
+		this.centerX = Math.round(cnv.width/2);
+		this.centerY = Math.round(cnv.height/2);
 		lapiz.ctx = cnv.getContext('2d');
 		return lapiz;
 	},
@@ -30,6 +32,5 @@ var canvas = {
 		return lapiz;
 	}
 };
-lapiz.canvas = canvas;
 
 /* end CANVAS *****************************/
