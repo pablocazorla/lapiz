@@ -1,0 +1,1 @@
+var Lap=Lapiz();Lap.canvas.select("sketch"),Lap.preload(function(){this.image.load("pablin","https://cf.geekdo-images.com/images/pic1912529.jpg"),this.image.load("mickey","https://apprecs.org/ios/images/app-icons/256/38/624653112.jpg")}).setup(function(){console.log("SETUP");var a=this.style.createPattern("mickey");this.style.fill(a).and().shape.rectangle(10,10,256,256)});
